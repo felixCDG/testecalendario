@@ -36,7 +36,7 @@ data class CalendarioResponse(
     val idUser: Int,
 
     @SerializedName("titulo")
-    val titulo: String,
+    val titulo: String?,
 
     @SerializedName("descricao")
     val descricao: String?,
@@ -94,7 +94,7 @@ fun CalendarioResponse.toEventoUI(): EventoUI {
 
     return EventoUI(
         id = this.idCalendario,
-        titulo = this.titulo,
+        titulo = this.titulo ?: "Sem título",
         descricao = this.descricao ?: "",
         data = data,
         hora = hora,

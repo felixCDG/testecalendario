@@ -25,10 +25,9 @@ import java.time.LocalDate
 @Composable
 fun EventoDialogComApi(
     viewModel: CalendarioViewModel,
-    dataSelecionada: LocalDate,
+    dataSelecionada: LocalDate = LocalDate.now(),
     onDismiss: () -> Unit
 ) {
-    // <CHANGE> Preenche automaticamente com a data selecionada
     var dia by remember { mutableStateOf(dataSelecionada.dayOfMonth.toString()) }
     var mes by remember { mutableStateOf(dataSelecionada.monthValue.toString()) }
     var ano by remember { mutableStateOf(dataSelecionada.year.toString()) }

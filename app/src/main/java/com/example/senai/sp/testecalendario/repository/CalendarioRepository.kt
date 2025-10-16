@@ -13,14 +13,18 @@ class CalendarioRepository {
     private val api: CalendarioApiService =
         RetrofitClient.instance.create(CalendarioApiService::class.java)
 
-    suspend fun getAllEventos(): Result<List<EventoUI>> = withContext(Dispatchers.IO) {
-        try {
-            val response = api.getAllEventos()
-            val eventos = response.dateCalender.map { it.toEventoUI() }
-            Result.success(eventos)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+    suspend fun getAllEventos(): List<EventoUI> = withContext(Dispatchers.IO) {
+        val response = api.getAllEventos()
+        response.dateCalender.map { it.toEventoUI() }
+    }
+
+    suspend fun criarEvento(request: CalendarioRequest): EventoUI = withContext(Dispatchers.IO) {
+        val response = api.createEvento(request)
+        response.toEventoUI()
+    }
+
+    suspend fun deletarEvento(id: Int): Unit = withContext(Dispatchers.IO) {
+        api.deleteEvento(id)
     }
 
     suspend fun createEvento(
@@ -31,23 +35,19 @@ class CalendarioRepository {
         horaCalendario: String,
         cor: String,
         alarmeAtivo: Boolean
-    ): Result<EventoUI> = withContext(Dispatchers.IO) {
-        try {
-            val request = CalendarioRequest(
-                idUser = idUser,
-                titulo = titulo,
-                descricao = descricao,
-                dataCalendario = dataCalendario,
-                horaCalendario = horaCalendario,
-                cor = cor,
-                alarmeAtivo = if (alarmeAtivo) 1 else 0
-            )
+    ): EventoUI = withContext(Dispatchers.IO) {
+        val request = CalendarioRequest(
+            idUser = idUser,
+            titulo = titulo,
+            descricao = descricao,
+            dataCalendario = dataCalendario,
+            horaCalendario = horaCalendario,
+            cor = cor,
+            alarmeAtivo = if (alarmeAtivo) 1 else 0
+        )
 
-            val response = api.createEvento(request)
-            Result.success(response.toEventoUI())
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        val response = api.createEvento(request)
+        response.toEventoUI()
     }
 
     suspend fun updateEvento(
@@ -59,31 +59,18 @@ class CalendarioRepository {
         horaCalendario: String,
         cor: String,
         alarmeAtivo: Boolean
-    ): Result<EventoUI> = withContext(Dispatchers.IO) {
-        try {
-            val request = CalendarioRequest(
-                idUser = idUser,
-                titulo = titulo,
-                descricao = descricao,
-                dataCalendario = dataCalendario,
-                horaCalendario = horaCalendario,
-                cor = cor,
-                alarmeAtivo = if (alarmeAtivo) 1 else 0
-            )
+    ): EventoUI = withContext(Dispatchers.IO) {
+        val request = CalendarioRequest(
+            idUser = idUser,
+            titulo = titulo,
+            descricao = descricao,
+            dataCalendario = dataCalendario,
+            horaCalendario = horaCalendario,
+            cor = cor,
+            alarmeAtivo = if (alarmeAtivo) 1 else 0
+        )
 
-            val response = api.updateEvento(id, request)
-            Result.success(response.toEventoUI())
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun deleteEvento(id: Int): Result<Unit> = withContext(Dispatchers.IO) {
-        try {
-            api.deleteEvento(id)
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        val response = api.updateEvento(id, request)
+        response.toEventoUI()
     }
 }
