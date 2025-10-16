@@ -8,9 +8,7 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
 
-    // ALTERE PARA O SEU ENDEREÇO DE API
-    // Para emulador Android: use "http://10.0.2.2:3000/"
-    // Para dispositivo físico: use o IP da sua máquina "http://192.168.x.x:3000/"
+    // Se estiver usando dispositivo físico, troque para o IP da sua máquina (ex: "http://192.168.x.x:3030/")
     private const val BASE_URL = "http://10.0.2.2:3030/v1/sosbaby/"
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
@@ -24,11 +22,11 @@ object RetrofitClient {
         .writeTimeout(30, TimeUnit.SECONDS)
         .build()
 
-    private val retrofit = Retrofit.Builder()
-        .baseUrl(BASE_URL)
-        .client(okHttpClient)
-        .addConverterFactory(GsonConverterFactory.create())
-        .build()
-
-    val calendarioApi: CalendarioApiService = retrofit.create(CalendarioApiService::class.java)
+    val instance: Retrofit by lazy {
+        Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
 }

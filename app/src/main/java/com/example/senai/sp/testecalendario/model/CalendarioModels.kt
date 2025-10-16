@@ -1,11 +1,10 @@
 package com.example.senai.sp.testecalendario.model
 
-
 import com.google.gson.annotations.SerializedName
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
-// Modelo para enviar dados para a API (POST/PUT)
 data class CalendarioRequest(
     @SerializedName("id_user")
     val idUser: Int,
@@ -17,19 +16,18 @@ data class CalendarioRequest(
     val descricao: String?,
 
     @SerializedName("data_calendario")
-    val dataCalendario: String, // Formato: "YYYY-MM-DD"
+    val dataCalendario: String,
 
     @SerializedName("hora_calendario")
-    val horaCalendario: String, // Formato: "HH:mm:ss"
+    val horaCalendario: String,
 
     @SerializedName("cor")
-    val cor: String, // Formato: "#RRGGBB"
+    val cor: String,
 
     @SerializedName("alarme_ativo")
     val alarmeAtivo: Int
 )
 
-// Modelo para receber dados da API (GET)
 data class CalendarioResponse(
     @SerializedName("id_calendario")
     val idCalendario: Int,
@@ -56,7 +54,20 @@ data class CalendarioResponse(
     val alarmeAtivo: Int
 )
 
-// Modelo para uso na UI
+data class CalendarioApiResponse(
+    @SerializedName("message")
+    val message: String,
+
+    @SerializedName("status_code")
+    val statusCode: Int,
+
+    @SerializedName("items")
+    val items: Int,
+
+    @SerializedName("dateCalender")
+    val dateCalender: List<CalendarioResponse>
+)
+
 data class EventoUI(
     val id: Int,
     val titulo: String,
@@ -67,27 +78,27 @@ data class EventoUI(
     val alarme: Boolean
 )
 
-// Função de extensão para converter CalendarioResponse em EventoUI
 fun CalendarioResponse.toEventoUI(): EventoUI {
+    val data = try {
+        LocalDate.parse(this.dataCalendario.substring(0, 10))
+    } catch (e: Exception) {
+        LocalDate.now()
+    }
+
+    val hora = try {
+        val horaString = this.horaCalendario.substring(11, 19)
+        LocalTime.parse(horaString)
+    } catch (e: Exception) {
+        LocalTime.now()
+    }
+
     return EventoUI(
         id = this.idCalendario,
         titulo = this.titulo,
         descricao = this.descricao ?: "",
-        data = LocalDate.parse(this.dataCalendario),
-        hora = LocalTime.parse(this.horaCalendario),
+        data = data,
+        hora = hora,
         cor = this.cor,
         alarme = this.alarmeAtivo == 1
     )
 }
-
-// Resposta padrão da API
-data class ApiResponse<T>(
-    @SerializedName("status")
-    val status: Boolean,
-
-    @SerializedName("message")
-    val message: String?,
-
-    @SerializedName("data")
-    val data: T?
-)
