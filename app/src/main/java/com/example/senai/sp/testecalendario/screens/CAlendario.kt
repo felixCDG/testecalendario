@@ -17,6 +17,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -28,6 +30,7 @@ import com.example.senai.sp.testecalendario.model.EventoUI
 import com.example.senai.sp.testecalendario.viewmodel.CalendarioViewModel
 import java.time.LocalDate
 import java.time.YearMonth
+import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.*
 
@@ -42,9 +45,9 @@ fun CalendarioScreen(
     var dataSelecionada by remember { mutableStateOf(LocalDate.now()) }
 
     val uiState by viewModel.uiState
-    val eventosHoje = viewModel.getEventosPorData(LocalDate.now())
+    // <CHANGE> Agora mostra TODOS os eventos, não filtra por data
+    val todosEventos = uiState.eventos
 
-    // Carrega eventos apenas uma vez quando a tela é criada
     LaunchedEffect(Unit) {
         viewModel.carregarEventos()
     }
@@ -62,112 +65,111 @@ fun CalendarioScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { mostrarDialogEvento = true },
-                containerColor = Color(0xFF7986CB)
+                containerColor = Color.White,
+                contentColor = Color(0xFF7986CB)
             ) {
                 Icon(
                     Icons.Default.Add,
-                    contentDescription = "Adicionar evento",
-                    tint = Color.White
+                    contentDescription = "Adicionar evento"
                 )
             }
         }
     ) { padding ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .background(Color.White)
         ) {
-            Column(
+            // Cabeçalho do mês
+            Row(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.White)
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // Cabeçalho do mês
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(onClick = { mesAtual = mesAtual.minusMonths(1) }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Mês anterior")
-                    }
-
-                    Text(
-                        text = "${mesAtual.month.getDisplayName(TextStyle.FULL, Locale("pt", "BR"))} ${mesAtual.year}",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    IconButton(onClick = { mesAtual = mesAtual.plusMonths(1) }) {
-                        Icon(Icons.Default.ArrowForward, contentDescription = "Próximo mês")
-                    }
+                IconButton(onClick = { mesAtual = mesAtual.minusMonths(1) }) {
+                    Icon(Icons.Default.ArrowBack, contentDescription = "Mês anterior")
                 }
 
-                // Grade do calendário
-                CalendarioGrid(
-                    mesAtual = mesAtual,
-                    onDiaSelecionado = { dataSelecionada = it }
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Seção "Hoje"
                 Text(
-                    text = "Hoje",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 16.dp)
+                    text = "${mesAtual.month.getDisplayName(TextStyle.FULL, Locale("pt", "BR"))} ${mesAtual.year}",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Mostrar erro se houver
-                if (uiState.error != null) {
-                    Text(
-                        text = uiState.error ?: "",
-                        modifier = Modifier.padding(16.dp),
-                        color = Color.Red,
-                        fontSize = 14.sp
-                    )
-                }
-
-                // Lista de eventos
-                if (eventosHoje.isEmpty() && !uiState.isLoading) {
-                    Text(
-                        text = "Nenhum evento para hoje",
-                        modifier = Modifier.padding(16.dp),
-                        color = Color.Gray
-                    )
-                } else {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                    ) {
-                        items(eventosHoje) { evento ->
-                            EventoCard(
-                                evento = evento,
-                                onDelete = {
-                                    viewModel.deletarEvento(evento.id)
-                                }
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                        }
-                    }
+                IconButton(onClick = { mesAtual = mesAtual.plusMonths(1) }) {
+                    Icon(Icons.Default.ArrowForward, contentDescription = "Próximo mês")
                 }
             }
 
-            // Loading overlay
-            if (uiState.isLoading) {
-                Box(
+            // Grade do calendário
+            CalendarioGrid(
+                mesAtual = mesAtual,
+                dataSelecionada = dataSelecionada,
+                onDiaSelecionado = { dataSelecionada = it }
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Seção de eventos com fundo gradiente azul
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .clip(RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp))
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color(0xFF7986CB),
+                                Color(0xFF9FA8DA)
+                            )
+                        )
+                    )
+            ) {
+                Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.3f)),
-                    contentAlignment = Alignment.Center
+                        .padding(24.dp)
                 ) {
-                    CircularProgressIndicator(color = Color(0xFF7986CB))
+                    Text(
+                        text = "Hoje",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    if (uiState.isLoading) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = Color.White)
+                        }
+                    } else if (todosEventos.isEmpty()) {
+                        Text(
+                            text = "Nenhum evento cadastrado",
+                            color = Color.White.copy(alpha = 0.7f),
+                            fontSize = 14.sp
+                        )
+                    } else {
+                        // <CHANGE> Mostra TODOS os eventos ordenados por data
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(todosEventos.sortedBy { it.data }) { evento ->
+                                EventoCard(
+                                    evento = evento,
+                                    onDelete = {
+                                        viewModel.deletarEvento(evento.id)
+                                    }
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -176,6 +178,7 @@ fun CalendarioScreen(
     if (mostrarDialogEvento) {
         EventoDialogComApi(
             viewModel = viewModel,
+            dataSelecionada = dataSelecionada,
             onDismiss = { mostrarDialogEvento = false }
         )
     }
@@ -184,6 +187,7 @@ fun CalendarioScreen(
 @Composable
 fun CalendarioGrid(
     mesAtual: YearMonth,
+    dataSelecionada: LocalDate,
     onDiaSelecionado: (LocalDate) -> Unit
 ) {
     val primeiroDia = mesAtual.atDay(1)
@@ -193,7 +197,6 @@ fun CalendarioGrid(
     val diasSemana = listOf("Do", "Mo", "Tu", "We", "Th", "Fr", "Sa")
 
     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-        // Cabeçalho dos dias da semana
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
@@ -211,7 +214,6 @@ fun CalendarioGrid(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Grade de dias
         var diaAtual = 1
         for (semana in 0..5) {
             Row(
@@ -256,10 +258,11 @@ fun EventoCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF7986CB)
-        )
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -274,26 +277,27 @@ fun EventoCard(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(12.dp)
+                        .size(48.dp)
                         .background(
                             Color(android.graphics.Color.parseColor(evento.cor)),
                             CircleShape
                         )
                 )
 
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(16.dp))
 
                 Column {
                     Text(
                         text = evento.titulo,
-                        color = Color.White,
+                        color = Color.Black,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
+                        fontSize = 16.sp
                     )
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = evento.hora.toString(),
-                        color = Color.White.copy(alpha = 0.8f),
-                        fontSize = 12.sp
+                        text = "${evento.data.format(DateTimeFormatter.ofPattern("dd/MM"))} - ${evento.hora.format(DateTimeFormatter.ofPattern("hh:mm a"))}",
+                        color = Color.Gray,
+                        fontSize = 14.sp
                     )
                 }
             }
@@ -302,7 +306,7 @@ fun EventoCard(
                 Icon(
                     Icons.Default.Delete,
                     contentDescription = "Deletar",
-                    tint = Color(0xFFE57373)
+                    tint = Color(0xFFB71C1C)
                 )
             }
         }

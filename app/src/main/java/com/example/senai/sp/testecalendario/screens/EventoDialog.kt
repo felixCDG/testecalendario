@@ -25,11 +25,12 @@ import java.time.LocalDate
 @Composable
 fun EventoDialogComApi(
     viewModel: CalendarioViewModel,
+    dataSelecionada: LocalDate = LocalDate.now(),
     onDismiss: () -> Unit
 ) {
-    var dia by remember { mutableStateOf("") }
-    var mes by remember { mutableStateOf("") }
-    var ano by remember { mutableStateOf("") }
+    var dia by remember { mutableStateOf(dataSelecionada.dayOfMonth.toString()) }
+    var mes by remember { mutableStateOf(dataSelecionada.monthValue.toString()) }
+    var ano by remember { mutableStateOf(dataSelecionada.year.toString()) }
     var hora by remember { mutableStateOf("12:00") }
     var titulo by remember { mutableStateOf("") }
     var descricao by remember { mutableStateOf("") }

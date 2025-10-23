@@ -3,44 +3,28 @@ package com.example.senai.sp.testecalendario.repository
 import com.example.senai.sp.testecalendario.model.CalendarioRequest
 import com.example.senai.sp.testecalendario.model.EventoUI
 import com.example.senai.sp.testecalendario.model.toEventoUI
+import com.example.senai.sp.testecalendario.service.CalendarioApiService
 import com.example.senai.sp.testecalendario.service.RetrofitClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class CalendarioRepository {
 
-    private val api = RetrofitClient.calendarioApi
+    private val api: CalendarioApiService =
+        RetrofitClient.instance.create(CalendarioApiService::class.java)
 
-    suspend fun getAllEventos(): Result<List<EventoUI>> = withContext(Dispatchers.IO) {
-        try {
-            val response = api.getAllCalendarios()
-            if (response.isSuccessful && response.body()?.status == true) {
-                val eventos = response.body()?.data?.map { it.toEventoUI() } ?: emptyList()
-                Result.success(eventos)
-            } else {
-                Result.failure(Exception(response.body()?.message ?: "Erro ao buscar eventos"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+    suspend fun getAllEventos(): List<EventoUI> = withContext(Dispatchers.IO) {
+        val response = api.getAllEventos()
+        response.dateCalender.map { it.toEventoUI() }
     }
 
-    suspend fun getEventoById(id: Int): Result<EventoUI> = withContext(Dispatchers.IO) {
-        try {
-            val response = api.getCalendarioById(id)
-            if (response.isSuccessful && response.body()?.status == true) {
-                val evento = response.body()?.data?.toEventoUI()
-                if (evento != null) {
-                    Result.success(evento)
-                } else {
-                    Result.failure(Exception("Evento não encontrado"))
-                }
-            } else {
-                Result.failure(Exception(response.body()?.message ?: "Erro ao buscar evento"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+    suspend fun criarEvento(request: CalendarioRequest): EventoUI = withContext(Dispatchers.IO) {
+        val response = api.createEvento(request)
+        response.toEventoUI()
+    }
+
+    suspend fun deletarEvento(id: Int): Unit = withContext(Dispatchers.IO) {
+        api.deleteEvento(id)
     }
 
     suspend fun createEvento(
@@ -51,32 +35,19 @@ class CalendarioRepository {
         horaCalendario: String,
         cor: String,
         alarmeAtivo: Boolean
-    ): Result<EventoUI> = withContext(Dispatchers.IO) {
-        try {
-            val request = CalendarioRequest(
-                idUser = idUser,
-                titulo = titulo,
-                descricao = descricao,
-                dataCalendario = dataCalendario,
-                horaCalendario = horaCalendario,
-                cor = cor,
-                alarmeAtivo = if (alarmeAtivo) 1 else 0
-            )
+    ): EventoUI = withContext(Dispatchers.IO) {
+        val request = CalendarioRequest(
+            idUser = idUser,
+            titulo = titulo,
+            descricao = descricao,
+            dataCalendario = dataCalendario,
+            horaCalendario = horaCalendario,
+            cor = cor,
+            alarmeAtivo = if (alarmeAtivo) 1 else 0
+        )
 
-            val response = api.createCalendario(request)
-            if (response.isSuccessful && response.body()?.status == true) {
-                val evento = response.body()?.data?.toEventoUI()
-                if (evento != null) {
-                    Result.success(evento)
-                } else {
-                    Result.failure(Exception("Erro ao criar evento"))
-                }
-            } else {
-                Result.failure(Exception(response.body()?.message ?: "Erro ao criar evento"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        val response = api.createEvento(request)
+        response.toEventoUI()
     }
 
     suspend fun updateEvento(
@@ -88,44 +59,18 @@ class CalendarioRepository {
         horaCalendario: String,
         cor: String,
         alarmeAtivo: Boolean
-    ): Result<EventoUI> = withContext(Dispatchers.IO) {
-        try {
-            val request = CalendarioRequest(
-                idUser = idUser,
-                titulo = titulo,
-                descricao = descricao,
-                dataCalendario = dataCalendario,
-                horaCalendario = horaCalendario,
-                cor = cor,
-                alarmeAtivo = if (alarmeAtivo) 1 else 0
-            )
+    ): EventoUI = withContext(Dispatchers.IO) {
+        val request = CalendarioRequest(
+            idUser = idUser,
+            titulo = titulo,
+            descricao = descricao,
+            dataCalendario = dataCalendario,
+            horaCalendario = horaCalendario,
+            cor = cor,
+            alarmeAtivo = if (alarmeAtivo) 1 else 0
+        )
 
-            val response = api.updateCalendario(id, request)
-            if (response.isSuccessful && response.body()?.status == true) {
-                val evento = response.body()?.data?.toEventoUI()
-                if (evento != null) {
-                    Result.success(evento)
-                } else {
-                    Result.failure(Exception("Erro ao atualizar evento"))
-                }
-            } else {
-                Result.failure(Exception(response.body()?.message ?: "Erro ao atualizar evento"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun deleteEvento(id: Int): Result<Unit> = withContext(Dispatchers.IO) {
-        try {
-            val response = api.deleteCalendario(id)
-            if (response.isSuccessful && response.body()?.status == true) {
-                Result.success(Unit)
-            } else {
-                Result.failure(Exception(response.body()?.message ?: "Erro ao deletar evento"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        val response = api.updateEvento(id, request)
+        response.toEventoUI()
     }
 }
