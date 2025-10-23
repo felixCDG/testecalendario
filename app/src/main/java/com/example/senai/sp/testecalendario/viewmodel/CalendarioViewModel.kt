@@ -65,7 +65,7 @@ class CalendarioViewModel : ViewModel() {
                 }
 
                 val request = CalendarioRequest(
-                    idUser = 1, // TODO: Substituir pelo ID do usuário logado
+                    idUser = 2, // TODO: Substituir pelo ID do usuário logado
                     titulo = titulo,
                     descricao = descricao.ifBlank { null },
                     dataCalendario = dataFormatada,

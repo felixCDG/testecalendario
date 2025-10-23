@@ -1,6 +1,5 @@
 package com.example.senai.sp.testecalendario.screens
 
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -11,8 +10,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,11 +32,13 @@ import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.*
+import androidx.compose.ui.graphics.graphicsLayer
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarioScreen(
-    navegacao: NavController,
+    navegacao: NavController?,
     viewModel: CalendarioViewModel = viewModel()
 ) {
     var mesAtual by remember { mutableStateOf(YearMonth.now()) }
@@ -45,7 +46,6 @@ fun CalendarioScreen(
     var dataSelecionada by remember { mutableStateOf(LocalDate.now()) }
 
     val uiState by viewModel.uiState
-    // <CHANGE> Agora mostra TODOS os eventos, não filtra por data
     val todosEventos = uiState.eventos
 
     LaunchedEffect(Unit) {
@@ -54,13 +54,7 @@ fun CalendarioScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Calendário") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF5E5E5E),
-                    titleContentColor = Color.White
-                )
-            )
+            TopNavigationBar(navegacao = navegacao)
         },
         floatingActionButton = {
             FloatingActionButton(
@@ -73,11 +67,13 @@ fun CalendarioScreen(
                     contentDescription = "Adicionar evento"
                 )
             }
-        }
+        },
+        contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .statusBarsPadding()
                 .padding(padding)
                 .background(Color.White)
         ) {
@@ -100,7 +96,11 @@ fun CalendarioScreen(
                 )
 
                 IconButton(onClick = { mesAtual = mesAtual.plusMonths(1) }) {
-                    Icon(Icons.Default.ArrowForward, contentDescription = "Próximo mês")
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Próximo mês",
+                        modifier = Modifier.graphicsLayer(rotationZ = 180f)
+                    )
                 }
             }
 
@@ -156,7 +156,6 @@ fun CalendarioScreen(
                             fontSize = 14.sp
                         )
                     } else {
-                        // <CHANGE> Mostra TODOS os eventos ordenados por data
                         LazyColumn(
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
@@ -181,6 +180,80 @@ fun CalendarioScreen(
             dataSelecionada = dataSelecionada,
             onDismiss = { mostrarDialogEvento = false }
         )
+    }
+}
+
+@Composable
+fun TopNavigationBar(navegacao: NavController?) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = Color.White,
+        shadowElevation = 4.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Botão voltar
+            IconButton(
+                onClick = { navegacao?.popBackStack() },
+                modifier = Modifier.size(40.dp)
+            ) {
+                Icon(
+                    Icons.Default.ArrowBack,
+                    contentDescription = "Voltar",
+                    tint = Color.Black
+                )
+            }
+
+            // Menu de navegação
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Home",
+                    fontSize = 14.sp,
+                    color = Color.Black,
+                    modifier = Modifier.clickable { navegacao?.navigate("home") }
+                )
+                Text(
+                    text = "Calendário",
+                    fontSize = 14.sp,
+                    color = Color.Black,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Dicas",
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                    modifier = Modifier.clickable { /* TODO: Navegar para Dicas */ }
+                )
+                Text(
+                    text = "Rotina",
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                    modifier = Modifier.clickable { /* TODO: Navegar para Rotina */ }
+                )
+            }
+
+            // Ícone de perfil
+            IconButton(
+                onClick = { /* TODO: Abrir perfil */ },
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(Color(0xFF7986CB), CircleShape)
+            ) {
+                Icon(
+                    Icons.Default.Person,
+                    contentDescription = "Perfil",
+                    tint = Color.White
+                )
+            }
+        }
     }
 }
 

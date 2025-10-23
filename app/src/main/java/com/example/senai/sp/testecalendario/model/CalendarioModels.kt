@@ -22,7 +22,7 @@ data class CalendarioRequest(
     val horaCalendario: String,
 
     @SerializedName("cor")
-    val cor: String,
+    val cor: String?,
 
     @SerializedName("alarme_ativo")
     val alarmeAtivo: Int
@@ -48,7 +48,7 @@ data class CalendarioResponse(
     val horaCalendario: String,
 
     @SerializedName("cor")
-    val cor: String,
+    val cor: String?,
 
     @SerializedName("alarme_ativo")
     val alarmeAtivo: Int
@@ -74,7 +74,7 @@ data class EventoUI(
     val descricao: String,
     val data: LocalDate,
     val hora: LocalTime,
-    val cor: String,
+    val cor: String?,
     val alarme: Boolean
 )
 
